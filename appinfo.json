@@ -5,7 +5,7 @@
     ],
     "companyName": "mikedfranco@gmail.com",
     "enableMultiJS": false,
-    "longName": "Rally Up",
+    "longName": "Rally Up - Friend Finding App",
     "projectType": "native",
     "resources": {
         "media": [
@@ -19,6 +19,11 @@
     },
     "sdkVersion": "3",
     "shortName": "Rally Up",
+    "targetPlatforms": [
+        "aplite",
+        "basalt",
+        "chalk"
+    ],
     "uuid": "0616792e-caa2-43c9-8438-ddde18c9a4bc",
     "versionLabel": "1.0",
     "watchapp": {

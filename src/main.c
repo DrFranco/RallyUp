@@ -12,18 +12,44 @@ static const GPathInfo ARROW_POINTS = {
 	3,(GPoint[]){{-25,0},{25,0},{0,-48}}
 };
 
+typedef enum {
+  AppKeyHeading = 0,  		// Key: 0
+  //AppKeyHeadingRad,        // Key: 1
+  AppKeyDistance,    // Key: 1
+  //AppKeyDistanceRad,      // Key: 3
+} AppKeys;
+
+static void inbox_received_callback(DictionaryIterator *iter, void *context) {
+  // A new message has been successfully received
+	Tuple *heading_tuple = dict_find(iter, AppKeyHeading);
+	Tuple *distance_tuple = dict_find(iter, AppKeyDistance);
+	if(heading_tuple){
+		rallyup_heading = heading_tuple->value->int32;
+	}
+	if(distance_tuple){
+		rallyup_distance = distance_tuple->value->int32;
+	}
+}
+
+int32_t rallyup_heading;
+//convert to 
+int32_t rallyup_distance;
 static Window *s_main_window;
 static BitmapLayer *s_bitmap_layer;
 static GBitmap *s_background_bitmap;
 static Layer *s_path_layer;
 static TextLayer *s_text_layer_calib_state, *s_heading_layer;
 
+// Largest Expected inbox and outbox message sizes
+const uint32_t inbox_size = ;
+const uint32_t outbox_size = ;
+
 static GPath *s_arrow;
 
 //might need to change heading_data based on what is sent by appMessage
 static void arrow_heading_handler(CompassHeadingData heading_data) {
 	//rotate arrow
-	gpath_rotate_to(s_arrow, heading_data.true_heading);
+	gpath_rotate_to(s_arrow, DEG_TO_TRIGANGLE(reallyup_heading) + heading_data.true_heading);//add own heading to heading_data.true_heading to get relative heading
 	
 	//display heading?
 	static char s_heading_buf[64];
@@ -97,6 +123,9 @@ static void main_window_load(Window *window) {
 	GPoint center = GPoint(bounds.size.w / 2, bounds.size.h / 2);
 	gpath_move_to(s_arrow,center);
 	
+	// Register to be notified about inbox received events
+	app_message_register_inbox_received(inbox_received_callback);
+
 	//place text layers onto screen
 	s_heading_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(40, 12),bounds.size.h*4/5,bounds.size.w/2,bounds.size.h/6));
 	text_layer_set_text(s_heading_layer, "No Data");
