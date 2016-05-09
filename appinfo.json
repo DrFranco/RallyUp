@@ -1,0 +1,27 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        ""
+    ],
+    "companyName": "mikedfranco@gmail.com",
+    "enableMultiJS": false,
+    "longName": "Rally Up",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "images/compass_background.png",
+                "name": "COMPASS_BACKGROUND",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            }
+        ]
+    },
+    "sdkVersion": "3",
+    "shortName": "Rally Up",
+    "uuid": "0616792e-caa2-43c9-8438-ddde18c9a4bc",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": false
+    }
+}
