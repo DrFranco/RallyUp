@@ -18,9 +18,15 @@ typedef enum {
   AppKeyDistance,    // Key: 1
   //AppKeyDistanceRad,      // Key: 3
 } AppKeys;
+int32_t rallyup_heading=0;
+//convert to 
+int32_t rallyup_distance;
+bool connection_status=false;
 
 static void inbox_received_callback(DictionaryIterator *iter, void *context) {
   // A new message has been successfully received
+	APP_LOG(APP_LOG_LEVEL_INFO,"A message has been received");
+	connection_status=true;
 	Tuple *heading_tuple = dict_find(iter, AppKeyHeading);
 	Tuple *distance_tuple = dict_find(iter, AppKeyDistance);
 	if(heading_tuple){
@@ -31,9 +37,7 @@ static void inbox_received_callback(DictionaryIterator *iter, void *context) {
 	}
 }
 
-int32_t rallyup_heading;
-//convert to 
-int32_t rallyup_distance;
+
 static Window *s_main_window;
 static BitmapLayer *s_bitmap_layer;
 static GBitmap *s_background_bitmap;
@@ -41,27 +45,31 @@ static Layer *s_path_layer;
 static TextLayer *s_text_layer_calib_state, *s_heading_layer;
 
 // Largest Expected inbox and outbox message sizes
-const uint32_t inbox_size = ;
-const uint32_t outbox_size = ;
+const uint32_t inbox_size = 16;
+const uint32_t outbox_size = 16;
+
+
 
 static GPath *s_arrow;
 
 //might need to change heading_data based on what is sent by appMessage
 static void arrow_heading_handler(CompassHeadingData heading_data) {
 	//rotate arrow
-	gpath_rotate_to(s_arrow, DEG_TO_TRIGANGLE(reallyup_heading) + heading_data.true_heading);//add own heading to heading_data.true_heading to get relative heading
-	
+	long new_heading = heading_data.true_heading + DEG_TO_TRIGANGLE(rallyup_heading);
+	gpath_rotate_to(s_arrow,  new_heading);//add own heading to heading_data.true_heading to get relative heading
+	//APP_LOG(APP_LOG_LEVEL_INFO,"True Heading: %ld",TRIGANGLE_TO_DEG((long)heading_data.magnetic_heading));
+	APP_LOG(APP_LOG_LEVEL_INFO,"RallyUp Heading: %ld",(long)rallyup_heading);
+	APP_LOG(APP_LOG_LEVEL_INFO,"RallyUp Distance: %ld", (long)rallyup_distance);
 	//display heading?
 	static char s_heading_buf[64];
-  snprintf(s_heading_buf, sizeof(s_heading_buf),
-    //" %ld°\n%ld.%02ldm",
-		" %ld.%02ldm",
-    //TRIGANGLE_TO_DEG((long)heading_data.magnetic_heading),
-    // display radians, units digit replace w distance
-    (TRIGANGLE_TO_DEG((long)heading_data.magnetic_heading) * 2) / 360,
-    // radians, digits after decimal
-    ((TRIGANGLE_TO_DEG((long)heading_data.magnetic_heading) * 200) / 360) % 100
-  );
+	if(connection_status)
+  	snprintf(s_heading_buf, sizeof(s_heading_buf),
+    	//" %ld°\n%ld.%02ldm",
+			" %ldm",
+    	//TRIGANGLE_TO_DEG((long)heading_data.magnetic_heading),
+   	 	// display radians, units digit replace w distance
+    	(long)rallyup_distance
+  	);
   text_layer_set_text(s_heading_layer, s_heading_buf);
 	
 	
@@ -81,7 +89,10 @@ static void arrow_heading_handler(CompassHeadingData heading_data) {
 		text_layer_set_background_color(s_text_layer_calib_state, GColorClear);
     text_layer_set_text_color(s_text_layer_calib_state, GColorBlack);
     text_layer_set_font(s_text_layer_calib_state, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-    text_layer_set_text(s_text_layer_calib_state, "Searching...");
+		if(connection_status == false)
+			text_layer_set_text(s_text_layer_calib_state, "Compass");
+		else
+			text_layer_set_text(s_text_layer_calib_state, "Searching");
 	}
 	text_layer_set_text_alignment(s_text_layer_calib_state, GTextAlignmentCenter);
 	layer_set_frame(text_layer_get_layer(s_text_layer_calib_state), alert_bounds);
@@ -125,6 +136,9 @@ static void main_window_load(Window *window) {
 	
 	// Register to be notified about inbox received events
 	app_message_register_inbox_received(inbox_received_callback);
+	
+	// Open AppMessage
+	app_message_open(inbox_size, outbox_size);
 
 	//place text layers onto screen
 	s_heading_layer = text_layer_create(GRect(PBL_IF_ROUND_ELSE(40, 12),bounds.size.h*4/5,bounds.size.w/2,bounds.size.h/6));
